@@ -25,8 +25,10 @@
     --ink-2:     #c4c0b3;
     --muted:     #7e7c70;
     --muted-2:  #555349;
-    --accent:    #c8ff3e;   /* electric lime — used sparingly */
-    --accent-2:  #ff7a3d;   /* alert orange — sparingly */
+    --accent:    #2dd4bf;   /* teal — used sparingly */
+    --accent-2:  #f59e0b;   /* amber — sparingly */
+    --accent-rgb: 45,212,191;
+    --accent-2-rgb: 245,158,11;
     --info:      #8fb8ff;
 
     --serif: "Fraunces", ui-serif, Georgia, serif;
@@ -71,8 +73,8 @@
     pointer-events: none;
     z-index: 1;
     background:
-      radial-gradient(ellipse at 50% -10%, rgba(200,255,62,.05), transparent 50%),
-      radial-gradient(ellipse at 100% 100%, rgba(255,122,61,.04), transparent 50%);
+      radial-gradient(ellipse at 50% -10%, rgba(var(--accent-rgb),.05), transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgba(var(--accent-2-rgb),.04), transparent 50%);
   }
 
   a { color: inherit; text-decoration: none; }
@@ -121,8 +123,14 @@
   }
   .brand b { color: var(--ink); font-weight: 500; }
   .topbar nav { display: flex; gap: 1.25rem; }
-  .topbar nav a { color: var(--muted); transition: color .2s; }
+  .topbar nav a { color: var(--muted); transition: color .2s; position: relative; }
   .topbar nav a:hover { color: var(--accent); }
+  .topbar nav a.active { color: var(--accent); }
+  .topbar nav a.active::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: -0.85rem;
+    height: 2px; background: var(--accent);
+  }
   .status {
     display: inline-flex; align-items: center; gap: .5rem;
     color: var(--muted);
@@ -134,9 +142,9 @@
     animation: pulse 2s infinite;
   }
   @keyframes pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(200,255,62,.6); }
-    70%  { box-shadow: 0 0 0 8px rgba(200,255,62,0); }
-    100% { box-shadow: 0 0 0 0 rgba(200,255,62,0); }
+    0%   { box-shadow: 0 0 0 0 rgba(var(--accent-rgb),.6); }
+    70%  { box-shadow: 0 0 0 8px rgba(var(--accent-rgb),0); }
+    100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb),0); }
   }
   @media (max-width: 720px) {
     .topbar nav { display: none; }
@@ -991,6 +999,22 @@ load avg: <span class="y">healthy</span>, <span class="y">curious</span>, <span 
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
   }, { threshold: 0.08 });
   document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+
+  // active section highlight in top nav
+  const navLinks = document.querySelectorAll(".topbar nav a[href^='#']");
+  const navSections = Array.from(navLinks)
+    .map(link => document.getElementById(link.getAttribute("href").slice(1)))
+    .filter(Boolean);
+  const navIo = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const id = e.target.id;
+      navLinks.forEach(link => {
+        link.classList.toggle("active", link.getAttribute("href") === `#${id}`);
+      });
+    });
+  }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+  navSections.forEach(section => navIo.observe(section));
 
   // rotating status text for character
   const statusStates = [
